@@ -24,7 +24,6 @@ from ..xades.context2 import XAdESContext2, PolicyId2, create_xades_epes_signatu
 from lxml import etree
 from html import escape  # escapes &, <, > … for XML safety
 
-
 # PARA VALIDAR JSON DE RESPUESTA
 # from .. import extensions
 
@@ -32,8 +31,8 @@ _logger = logging.getLogger(__name__)
 
 
 def sign_xml(cert, password, xml, policy_id='https://cdn.comprobanteselectronicos.go.cr/xml-schemas/'
-             'Resoluci%C3%B3n_General_sobre_disposiciones_t%C3%A9cnicas_comprobantes_electr%C3%B3nicos_'
-             'para_efectos_tributarios.pdf'):
+                                            'Resoluci%C3%B3n_General_sobre_disposiciones_t%C3%A9cnicas_comprobantes_electr%C3%B3nicos_'
+                                            'para_efectos_tributarios.pdf'):
     root = etree.fromstring(xml)
     signature = create_xades_epes_signature()
 
@@ -42,7 +41,7 @@ def sign_xml(cert, password, xml, policy_id='https://cdn.comprobanteselectronico
 
     root.append(signature)
     ctx = XAdESContext2(policy)
-    private_key, cert, ca_certificates = load_key_and_certificates(base64.b64decode(cert),bytes(password, 'utf-8'))
+    private_key, cert, ca_certificates = load_key_and_certificates(base64.b64decode(cert), bytes(password, 'utf-8'))
 
     # Directly Assign private key and certificate.
     ctx.private_key = private_key
@@ -99,7 +98,6 @@ def get_mr_sequencevalue(inv):
 
 
 def get_consecutivo_hacienda(tipo_documento, consecutivo, sucursal_id, terminal_id):
-
     tipo_doc = fe_enums.TipoDocumento[tipo_documento]
 
     inv_consecutivo = str(consecutivo).zfill(10)
@@ -112,7 +110,6 @@ def get_consecutivo_hacienda(tipo_documento, consecutivo, sucursal_id, terminal_
 
 
 def get_clave_hacienda(doc, tipo_documento, consecutivo, sucursal_id, terminal_id, situacion='normal'):
-
     tipo_doc = fe_enums.TipoDocumento[tipo_documento]
 
     # Verificamos si el consecutivo indicado corresponde a un numero
@@ -167,7 +164,7 @@ def get_clave_hacienda(doc, tipo_documento, consecutivo, sucursal_id, terminal_i
     codigo_seguridad = str(random.randint(1, 99999999)).zfill(8)
 
     clave_hacienda = codigo_pais + cur_date + cedula_emisor + \
-        consecutivo_mh + situacion_comprobante + codigo_seguridad
+                     consecutivo_mh + situacion_comprobante + codigo_seguridad
 
     return {'length': len(clave_hacienda), 'clave': clave_hacienda, 'consecutivo': consecutivo_mh}
 
@@ -184,6 +181,8 @@ def get_token_hacienda(inv, tipo_ambiente):
     global last_tokens_time
     global last_tokens_expire
     global last_tokens_refresh
+
+    token_hacienda = False
 
     token = last_tokens.get(inv.company_id.id, False)
     token_time = last_tokens_time.get(inv.company_id.id, False)
@@ -230,7 +229,6 @@ def get_token_hacienda(inv, tipo_ambiente):
 
 
 def refresh_token_hacienda(tipo_ambiente, token):
-
     headers = {}
     data = {
         'client_id': tipo_ambiente,
@@ -296,7 +294,7 @@ def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
     mr_consecutivo_receptor = re.sub('[^0-9]', '', consecutivo_receptor)
     if len(mr_consecutivo_receptor) != 20:
         raise UserError(_('La clave del consecutivo para el mensaje receptor es inválida. '
-                        'Debe contener al menos 50 digitos'))
+                          'Debe contener al menos 50 digitos'))
 
     mr_monto_impuesto = monto_impuesto
     mr_detalle_mensaje = detalle_mensaje
@@ -346,15 +344,15 @@ def gen_xml_mr_43(clave, cedula_emisor, fecha_emision, id_mensaje,
 
     return str(sb)
 
+
 def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
                 total_servicio_exento, totalServExonerado,
                 total_mercaderia_gravado, total_mercaderia_exento,
                 totalMercExonerada, totalOtrosCargos, total_iva_devuelto, base_total,
-                total_impuestos,total_desgloce_impuesto, total_descuento, lines,
+                total_impuestos, total_desgloce_impuesto, total_descuento, lines,
                 otrosCargos, currency_rate, invoice_comments,
                 tipo_documento_referencia, numero_documento_referencia,
                 fecha_emision_referencia, codigo_referencia, razon_referencia):
-
     numero_linea = 0
     payment_methods_id = []
 
@@ -396,7 +394,7 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
                if inv.company_id.invoice_provider_type == 'external'
                else inv.company_id.vat) + '</ProveedorSistemas>')
     sb.append('<CodigoActividadEmisor>' + str(inv.company_id.activity_id.code) + '</CodigoActividadEmisor>')
-    if inv.tipo_documento in ["FE","FEC","NC","ND"] and inv.partner_id.activity_id.code:
+    if inv.tipo_documento in ["FE", "FEC", "NC", "ND"] and inv.partner_id.activity_id.code:
         sb.append('<CodigoActividadReceptor>' + str(inv.partner_id.activity_id.code) + '</CodigoActividadReceptor>')
     sb.append('<NumeroConsecutivo>' + inv.number_electronic[21:41] + '</NumeroConsecutivo>')
     sb.append('<FechaEmision>' + inv.date_issuance + '</FechaEmision>')
@@ -406,7 +404,8 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
     sb.append('<Tipo>' + str(issuing_company.identification_id.code) + '</Tipo>')
     sb.append('<Numero>' + str(issuing_company.vat) + '</Numero>')
     sb.append('</Identificacion>')
-    sb.append('<NombreComercial>' + escape(str(issuing_company.commercial_name or 'No disponible')) + '</NombreComercial>')
+    sb.append(
+        '<NombreComercial>' + escape(str(issuing_company.commercial_name or 'No disponible')) + '</NombreComercial>')
     sb.append('<Ubicacion>')
     sb.append('<Provincia>' + str(issuing_company.state_id.code) + '</Provincia>')
     sb.append('<Canton>' + str(issuing_company.county_id.code) + '</Canton>')
@@ -456,7 +455,6 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
             sb.append('<Tipo>' + str(id_code) + '</Tipo>')
             sb.append('<Numero>' + str(vat) + '</Numero>')
             sb.append('</Identificacion>')
-                
 
             if inv.tipo_documento != 'FEE':
                 if receiver_company.state_id and \
@@ -473,7 +471,8 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
                         )
                         if neighborhood_value:
                             sb.append(f"<Barrio>{neighborhood_value}</Barrio>")
-                    sb.append('<OtrasSenas>' + escape(str(receiver_company.street or 'No disponible')) + '</OtrasSenas>')
+                    sb.append(
+                        '<OtrasSenas>' + escape(str(receiver_company.street or 'No disponible')) + '</OtrasSenas>')
                     sb.append('</Ubicacion>')
 
             if receiver_company.phone:
@@ -536,16 +535,15 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
             sb.append('<SubTotal>' + str(v['subtotal']) + '</SubTotal>')
 
             if inv.tipo_documento not in ['FEE', 'REP']:
-                if v['impuesto'][1]['codigo']=='01' and v['subtotal'] > 0:
+                if v['impuesto'][1]['codigo'] == '01' and v['subtotal'] > 0:
                     sb.append('<BaseImponible>' + str(v['subtotal']) + '</BaseImponible>')
-                
+
                 # En caso que el impuesto sea: selectivo de consumo (02),
                 # entonces BaseImponible se obtiene de la suma entre el campo “Subtotal”, más el impuesto selectivo de consumo (02)
                 # o el impuesto al cemento (12)
-                elif v['impuesto'][1]['codigo']=='02' or v['impuesto'][1]['codigo']=='12':
+                elif v['impuesto'][1]['codigo'] == '02' or v['impuesto'][1]['codigo'] == '12':
                     sum_baseImponible = v['subtotal'] + v['impuesto'][1]['monto']
                     sb.append('<BaseImponible>' + str(sum_baseImponible) + '</BaseImponible>')
-
 
             if v.get('impuesto'):
                 for (a, b) in v['impuesto'].items():
@@ -582,7 +580,7 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
                             sb.append('</Exoneracion>')
                     sb.append('</Impuesto>')
 
-                if inv.tipo_documento not in ['FEE','FEC','REP']:
+                if inv.tipo_documento not in ['FEE', 'FEC', 'REP']:
                     sb.append('<ImpuestoAsumidoEmisorFabrica>' + str(0) + '</ImpuestoAsumidoEmisorFabrica>')
                 if inv.tipo_documento != 'FEE':
                     sb.append('<ImpuestoNeto>' + str(v['impuestoNeto']) + '</ImpuestoNeto>')
@@ -592,9 +590,11 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
         sb.append('</DetalleServicio>')
 
     if otrosCargos:
-        sb.append('<OtrosCargos>')
         for otro_cargo in otrosCargos:
-            sb.append('<TipoDocumento>' + str(otrosCargos[otro_cargo]['TipoDocumento']) + '</TipoDocumento>')
+            sb.append('<OtrosCargos>')
+            sb.append('<TipoDocumentoOC>' + str(otrosCargos[otro_cargo]['TipoDocumento']) + '</TipoDocumentoOC>')
+            if otrosCargos[otro_cargo]['TipoDocumento'] == '99':
+                sb.append('<TipoDocumentoOTROS>' + 'PAGO TERCEROS' + '</TipoDocumentoOTROS>')
 
             if otrosCargos[otro_cargo].get('NumeroIdentidadTercero'):
                 sb.append('<NumeroIdentidadTercero>' +
@@ -610,7 +610,7 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
                 sb.append('<Porcentaje>' + str(otrosCargos[otro_cargo]['Porcentaje']) + '</Porcentaje>')
 
             sb.append('<MontoCargo>' + str(otrosCargos[otro_cargo]['MontoCargo']) + '</MontoCargo>')
-        sb.append('</OtrosCargos>')
+            sb.append('</OtrosCargos>')
 
     sb.append('<ResumenFactura>')
     sb.append('<CodigoTipoMoneda>')
@@ -647,12 +647,13 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
     sb.append('<TotalDescuentos>' + str(round(total_descuento, 5)) + '</TotalDescuentos>')
     sb.append('<TotalVentaNeta>' + str(round(base_total, 5)) + '</TotalVentaNeta>')
 
-    sb.append('<TotalDesgloseImpuesto>') 
+    sb.append('<TotalDesgloseImpuesto>')
     for tax_code in total_desgloce_impuesto:
         for iva_tax in total_desgloce_impuesto[tax_code]:
             sb.append('<Codigo>' + str(tax_code) + '</Codigo>')
             sb.append('<CodigoTarifaIVA>' + str(iva_tax) + '</CodigoTarifaIVA>')
-            sb.append('<TotalMontoImpuesto>' + str(round(total_desgloce_impuesto[tax_code][iva_tax], 5)) + '</TotalMontoImpuesto>')
+            sb.append('<TotalMontoImpuesto>' + str(
+                round(total_desgloce_impuesto[tax_code][iva_tax], 5)) + '</TotalMontoImpuesto>')
     sb.append('</TotalDesgloseImpuesto>')
     sb.append('<TotalImpuesto>' + str(round(total_impuestos, 5)) + '</TotalImpuesto>')
 
@@ -662,15 +663,12 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
     sb.append('<TotalOtrosCargos>' + str(totalOtrosCargos) + '</TotalOtrosCargos>')
     sb.append('<MedioPago>')
 
-
     payment_method_length = len(payment_methods_id)
     total_payment_method = round(base_total + total_impuestos + totalOtrosCargos - total_iva_devuelto, 5)
     for payment_method_counter in range(min(payment_method_length, 4)):
         sb.append('<TipoMedioPago>' + payment_methods_id[payment_method_counter] + '</TipoMedioPago>')
-        sb.append('<TotalMedioPago>' + str(total_payment_method)+ '</TotalMedioPago>')
-    
-     
-    
+        sb.append('<TotalMedioPago>' + str(total_payment_method) + '</TotalMedioPago>')
+
     sb.append('</MedioPago>')
 
     sb.append('<TotalComprobante>' +
@@ -692,7 +690,7 @@ def gen_xml_v43(inv, sale_conditions, total_servicio_gravado,
         if invoice_comments:
             sb.append('<OtroTexto>' + str(invoice_comments) + '</OtroTexto>')
         if invoice_ref:
-            sb.append('<OtroContenido>'+ str(invoice_ref) + '</OtroContenido>')
+            sb.append('<OtroContenido>' + str(invoice_ref) + '</OtroContenido>')
         sb.append('</Otros>')
 
     sb.append('</' + fe_enums.tagName[inv.tipo_documento] + '>')
@@ -897,7 +895,8 @@ def consulta_clave(clave, token, tipo_ambiente):
             'respuesta-xml': response.json().get('respuesta-xml')
         }
     elif 400 <= response.status_code <= 499:
-        _logger.error('FECR - 400 - consulta_clave failed.  error: %s reason: %s', response.status_code, response.reason)
+        _logger.error('FECR - 400 - consulta_clave failed.  error: %s reason: %s', response.status_code,
+                      response.reason)
         response_json = {
             'status': 400,
             'ind-estado': 'error'
@@ -1117,7 +1116,8 @@ def load_xml_data(invoice, load_lines, account_id, product_id=False, analytic_ac
     invoice.date_issuance = invoice_xml.xpath("inv:FechaEmision", namespaces=namespaces)[0].text
     invoice.invoice_date = invoice.date_issuance
     invoice.tipo_documento = False
-    invoice.amount_total_electronic_invoice = float(invoice_xml.xpath("inv:ResumenFactura/inv:TotalComprobante", namespaces=namespaces)[0].text)
+    invoice.amount_total_electronic_invoice = float(
+        invoice_xml.xpath("inv:ResumenFactura/inv:TotalComprobante", namespaces=namespaces)[0].text)
 
     tipo_codigo = invoice_xml.xpath("inv:NumeroConsecutivo", namespaces=namespaces)[0].text[8:10]  # posiciones 9-10
     tipo_map = {
@@ -1130,7 +1130,6 @@ def load_xml_data(invoice, load_lines, account_id, product_id=False, analytic_ac
         '07': 'NDE',  # Nota de Envío
     }
     invoice.tipo_documento = tipo_map.get(tipo_codigo, False)
-
 
     emisor = invoice_xml.xpath("inv:Emisor/inv:Identificacion/inv:Numero", namespaces=namespaces)[0].text
     tipo_emisor = invoice_xml.xpath("inv:Emisor/inv:Identificacion/inv:Tipo", namespaces=namespaces)[0].text
@@ -1321,12 +1320,13 @@ def load_xml_data(invoice, load_lines, account_id, product_id=False, analytic_ac
                     if product_id and product_id.non_tax_deductible:
                         invoice.message_post(
                             body='Tax code %s and percentage %s as non-tax deductible is not registered in the system' % (
-                            tax_code, tax_amount))
+                                tax_code, tax_amount))
                         _logger.info(
                             'Tax code %s and percentage %s as non-tax deductible is not registered in the system' % (
-                            tax_code, tax_amount))
+                                tax_code, tax_amount))
                     else:
-                        _logger.info('Tax code %s and percentage %s is not registered in the system' % (tax_code, tax_amount))
+                        _logger.info(
+                            'Tax code %s and percentage %s is not registered in the system' % (tax_code, tax_amount))
                         invoice.message_post(
                             body='Tax code %s and percentage %s is not registered in the system' % (
                                 tax_code, tax_amount))
@@ -1337,15 +1337,15 @@ def load_xml_data(invoice, load_lines, account_id, product_id=False, analytic_ac
                 'move_id': invoice.id,
                 'price_unit': line.xpath("inv:PrecioUnitario", namespaces=namespaces)[0].text,
                 'quantity': line.xpath("inv:Cantidad", namespaces=namespaces)[0].text,
-                #'uom_id': product_uom,
+                # 'uom_id': product_uom,
                 'sequence': line.xpath("inv:NumeroLinea", namespaces=namespaces)[0].text,
                 'discount': discount_percentage,
                 # 'price_subtotal' =
                 'discount_note': discount_note,
                 # 'total_amount': total_amount,
                 'product_id': product,
-                #'account_id': account_id.id or False,
-                #'account_analytic_id': analytic_account,
+                # 'account_id': account_id.id or False,
+                # 'account_analytic_id': analytic_account,
                 # 'amount_untaxed': float(line.xpath("inv:SubTotal", namespaces=namespaces)[0].text),
                 'total_tax': total_tax,
                 'display_type': 'product',
@@ -1353,8 +1353,8 @@ def load_xml_data(invoice, load_lines, account_id, product_id=False, analytic_ac
                 "tax_ids": taxes
             })
 
-            #invoice_line.price_unit = line.xpath("inv:PrecioUnitario", namespaces=namespaces)[0].text
-            #invoice_line
+            # invoice_line.price_unit = line.xpath("inv:PrecioUnitario", namespaces=namespaces)[0].text
+            # invoice_line
 
             # This must be assigned after line is created
             # invoice_line.tax_ids = taxes
@@ -1363,6 +1363,7 @@ def load_xml_data(invoice, load_lines, account_id, product_id=False, analytic_ac
             if not invoice.invoice_line_ids:
                 invoice.unlink()
                 raise UserError('Documento no cuenta con lineas de detalles.')
+
 
 def p12_expiration_date(p12file, password):
     try:
@@ -1375,6 +1376,8 @@ def p12_expiration_date(p12file, password):
         return cert.not_valid_after
     except Exception as e:
         raise
+
+
 def normalize_neighborhood(name: str) -> str:
     """
     Ensures the <Barrio> value meets Hacienda's minLength=5 rule.
